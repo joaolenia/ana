@@ -1,10 +1,21 @@
 import './RankingCard.css';
-import { motion } from 'framer-motion';
-import { Medal } from 'lucide-react';
+import { MedalIcon } from './Icons';
 import type { Categoria } from '../pages/Dashboard';
 
+interface SalaProps {
+  id: string;
+  nome: string;
+  organizacao: number;
+  materiais: number;
+  respeito: number;
+  limpeza: number;
+  equipe: number;
+  participacao: number;
+  geral: number;
+}
+
 interface RankingCardProps {
-  sala: any;
+  sala: SalaProps;
   posicao: number;
   categoria: Categoria;
 }
@@ -16,18 +27,14 @@ export function RankingCard({ sala, posicao, categoria }: RankingCardProps) {
   if (posicao === 2) medalColor = 'var(--color-silver)';
   if (posicao === 3) medalColor = 'var(--color-bronze)';
 
+  const pontuacao = sala[categoria];
+
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className={`ranking-card ${posicao === 1 ? 'first-place' : ''}`}
-    >
+    <div className={`ranking-card ${posicao === 1 ? 'first-place' : ''}`}>
       <div className="rc-posicao">
         {isTop3 ? (
           <div className="rc-medal">
-            <Medal size={28} color={medalColor} fill={medalColor} />
+            <MedalIcon size={28} color={medalColor} />
             <span className="rc-medal-text">{posicao}º</span>
           </div>
         ) : (
@@ -42,18 +49,16 @@ export function RankingCard({ sala, posicao, categoria }: RankingCardProps) {
 
       <div className="rc-pontuacao">
         <div className="rc-bar-bg">
-          <motion.div 
+          <div 
             className="rc-bar-fill"
-            initial={{ width: 0 }}
-            animate={{ width: `${sala[categoria]}%` }}
-            transition={{ duration: 1, delay: 0.2 }}
             style={{ 
+              width: `${pontuacao}%`,
               backgroundColor: posicao === 1 ? 'var(--color-secondary)' : 'var(--color-primary)' 
             }}
           />
         </div>
-        <span className="rc-pontos-num">{sala[categoria]} pts</span>
+        <span className="rc-pontos-num">{pontuacao} pts</span>
       </div>
-    </motion.div>
+    </div>
   );
 }
