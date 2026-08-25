@@ -3,7 +3,7 @@ import './Dashboard.css';
 import { FilterBar } from '../components/FilterBar';
 import { RankingCard } from '../components/RankingCard';
 import logoEscola from '../assets/image_d02b09.jpg';
-import { LuTarget, LuTrophy, LuUsers, LuX, LuClock, LuCircleAlert, LuCircleCheck } from 'react-icons/lu';
+import { LuTarget, LuTrophy, LuUsers, LuX, LuClock, LuCircleAlert, LuCircleCheck, LuMapPin, LuPhone, LuMail, LuUser } from 'react-icons/lu';
 import { supabase } from '../config/supabase';
 
 export type Categoria = 'geral' | 'organizacao' | 'materiais' | 'respeito' | 'limpeza' | 'equipe' | 'participacao';
@@ -69,7 +69,6 @@ export function Dashboard() {
     : 0;
   const salaLider = sortedSalas[0];
 
-  // Função para formatar a data (YYYY-MM-DD para DD/MM/YYYY)
   const formatarData = (dataString: string) => {
     if (!dataString) return '';
     const partes = dataString.split('-');
@@ -79,12 +78,36 @@ export function Dashboard() {
 
   return (
     <div className="dash-layout">
-      <header className="dash-header">
-        <div className="brand-group">
-          <img src={logoEscola} alt="Colégio Ana Boico" className="brand-logo" />
-          <div>
-            <h1>Dashboard de Desempenho</h1>
-            <p>Acompanhamento Analítico e Gamificação Escolar</p>
+      {/* CABEÇALHO INSTITUCIONAL RICO */}
+      <header className="dash-header-institutional">
+        <div className="institutional-top">
+          <div className="brand-group">
+            <img src={logoEscola} alt="Colégio Ana Boico" className="brand-logo" />
+            <div>
+              <span className="badge-rede">Rede Estadual - PR</span>
+              <h1>C. E. Ana Boico Olinquevicz</h1>
+              <p>General Carneiro • NRE União da Vitória</p>
+              <p>Acompanhamento Analítico e Pontuação em Tempo Real - Ensino Integral</p>
+            </div>
+          </div>
+
+          <div className="institutional-meta">
+            <div className="meta-item">
+              <LuUser size={16} />
+              <span><strong>Diretor(a):</strong> Andre Brand de Paula Gouveia</span>
+            </div>
+            <div className="meta-item">
+              <LuMapPin size={16} />
+              <span>Rua Augusto Andreolli, 16 - Jd. São João</span>
+            </div>
+            <div className="meta-item">
+              <LuPhone size={16} />
+              <span>(42) 3552-1580</span>
+            </div>
+            <div className="meta-item">
+              <LuMail size={16} />
+              <span>gncanaboico@seed.pr.gov.br</span>
+            </div>
           </div>
         </div>
       </header>
@@ -152,6 +175,11 @@ export function Dashboard() {
         )}
       </main>
 
+      {/* RODAPÉ SOLICITADO */}
+      <footer className="dash-footer">
+        <p>Desenvolvido por Joao Pedro Golenia • Todos os direitos reservados</p>
+      </footer>
+
       {/* MODAL DE HISTÓRICO */}
       {salaModal && (
         <div className="modal-overlay" onClick={() => setSalaModal(null)}>
@@ -173,7 +201,6 @@ export function Dashboard() {
                   <p>Nenhum registro encontrado para esta turma.</p>
                 </div>
               ) : (
-                // Inverte o array para mostrar os mais recentes primeiro
                 [...salaModal.historico_registros].reverse().map((reg: any, index: number) => (
                   <div key={reg.id_registro || index} className={`history-item ${reg.tipo}`}>
                     <div className="history-item-icon">
