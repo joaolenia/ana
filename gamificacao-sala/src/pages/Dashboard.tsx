@@ -3,8 +3,8 @@ import './Dashboard.css';
 import { FilterBar } from '../components/FilterBar';
 import { RankingCard } from '../components/RankingCard';
 import logoEscola from '../assets/image_d02b09.jpg';
-import { LuTarget, LuTrophy, LuUsers } from 'react-icons/lu';
-import { supabase } from '../config/supabase'; // <-- Conexão com o banco
+import { LuTarget, LuTrophy, LuUsers, LuX, LuClock, LuCircleAlert, LuCircleCheck } from 'react-icons/lu';
+import { supabase } from '../config/supabase';
 
 export type Categoria = 'geral' | 'organizacao' | 'materiais' | 'respeito' | 'limpeza' | 'equipe' | 'participacao';
 
@@ -17,15 +17,18 @@ interface SalaDB {
   limpeza: number;
   equipe: number;
   participacao: number;
-  geral?: number; // Calculado no front
+  geral?: number; 
+  historico_registros?: any[];
 }
 
 export function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<Categoria>('geral');
   const [salas, setSalas] = useState<SalaDB[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Estado para controlar o modal de histórico
+  const [salaModal, setSalaModal] = useState<SalaDB | null>(null);
 
-  // Busca os dados do Supabase ao montar a tela
   useEffect(() => {
     async function fetchSalas() {
       try {
@@ -36,10 +39,15 @@ export function Dashboard() {
         if (error) throw error;
 
         if (data) {
-          // Calcula a média geral de cada sala com base nos dados do banco
+          // Calcula a pontuação geral como a SOMA de todos os critérios
           const dataWithGeral = data.map(sala => {
-            const media = (sala.organizacao + sala.materiais + sala.respeito + sala.limpeza + sala.equipe + sala.participacao) / 6;
-            return { ...sala, geral: Math.round(media) };
+            const soma = (sala.organizacao || 0) + 
+                         (sala.materiais || 0) + 
+                         (sala.respeito || 0) + 
+                         (sala.limpeza || 0) + 
+                         (sala.equipe || 0) + 
+                         (sala.participacao || 0);
+            return { ...sala, geral: soma };
           });
           setSalas(dataWithGeral);
         }
@@ -53,15 +61,21 @@ export function Dashboard() {
     fetchSalas();
   }, []);
   
-  // Ordena as salas baseadas no filtro ativo
   const sortedSalas = [...salas].sort((a, b) => (b[activeFilter] || 0) - (a[activeFilter] || 0));
 
-  // KPIs
   const totalSalas = sortedSalas.length;
   const mediaGeralEscola = totalSalas > 0 
     ? Math.round(salas.reduce((acc, curr) => acc + (curr.geral || 0), 0) / totalSalas) 
     : 0;
   const salaLider = sortedSalas[0];
+
+  // Função para formatar a data (YYYY-MM-DD para DD/MM/YYYY)
+  const formatarData = (dataString: string) => {
+    if (!dataString) return '';
+    const partes = dataString.split('-');
+    if (partes.length !== 3) return dataString;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  };
 
   return (
     <div className="dash-layout">
@@ -77,7 +91,7 @@ export function Dashboard() {
 
       <main>
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+          <div className="loading-state">
             Carregando dados do servidor...
           </div>
         ) : (
@@ -120,17 +134,77 @@ export function Dashboard() {
 
             <section className="ranking-grid">
               {sortedSalas.map((sala, index) => (
-                <RankingCard 
+                <div 
                   key={sala.id} 
-                  sala={sala} 
-                  posicao={index + 1} 
-                  categoria={activeFilter} 
-                />
+                  className="ranking-card-wrapper"
+                  onClick={() => setSalaModal(sala)}
+                  title="Clique para ver o histórico"
+                >
+                  <RankingCard 
+                    sala={sala} 
+                    posicao={index + 1} 
+                    categoria={activeFilter} 
+                  />
+                </div>
               ))}
             </section>
           </>
         )}
       </main>
+
+      {/* MODAL DE HISTÓRICO */}
+      {salaModal && (
+        <div className="modal-overlay" onClick={() => setSalaModal(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <header className="modal-header">
+              <div>
+                <h2>Histórico da Turma</h2>
+                <p>{salaModal.nome}</p>
+              </div>
+              <button className="btn-close" onClick={() => setSalaModal(null)}>
+                <LuX size={24} />
+              </button>
+            </header>
+
+            <div className="history-list">
+              {(!salaModal.historico_registros || salaModal.historico_registros.length === 0) ? (
+                <div className="empty-history">
+                  <LuClock size={48} />
+                  <p>Nenhum registro encontrado para esta turma.</p>
+                </div>
+              ) : (
+                // Inverte o array para mostrar os mais recentes primeiro
+                [...salaModal.historico_registros].reverse().map((reg: any, index: number) => (
+                  <div key={reg.id_registro || index} className={`history-item ${reg.tipo}`}>
+                    <div className="history-item-icon">
+                      {reg.tipo === 'avaliacao' ? <LuCircleCheck size={20} /> : <LuCircleAlert size={20} />}
+                    </div>
+                    <div className="history-item-details">
+                      <div className="history-item-top">
+                        <strong>Prof. {reg.professor}</strong>
+                        <span className="history-date">{formatarData(reg.data)}</span>
+                      </div>
+                      
+                      {reg.tipo === 'avaliacao' ? (
+                        <div className="history-item-body positive">
+                          <span>Avaliação Registrada</span>
+                          <strong className="points">+{reg.pontos_totais} pts</strong>
+                        </div>
+                      ) : (
+                        <div className="history-item-body negative">
+                          <span>Penalidade: {reg.area_penalizada}</span>
+                          <strong className="points">-{reg.pontos_retirados} pts</strong>
+                          {reg.motivo && <p className="penalty-motive">"{reg.motivo}"</p>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
