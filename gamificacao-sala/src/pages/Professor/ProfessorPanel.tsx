@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { TURMAS, REQUISITOS } from '../../config/data';
-import type { RequisitoId } from '../../config/data';
-import { LuLogOut, LuCalendar, LuCircleCheck, LuOctagonAlert, LuPenTool, LuMessageSquareWarning } from 'react-icons/lu';
+import { useState, useEffect } from 'react';
+import { REQUISITOS } from '../../config/data';
+import type {  RequisitoId } from '../../config/data';
+import { supabase } from '../../config/supabase';
+import { LuLogOut, LuCalendar, LuCircleCheck, LuPenTool, LuMessageSquareWarning } from 'react-icons/lu';
 import './ProfessorPanel.css';
 
 interface ProfessorPanelProps {
@@ -10,7 +11,6 @@ interface ProfessorPanelProps {
 
 type Mode = 'avaliacao' | 'penalidade';
 
-// Presets de motivos de acordo com a área selecionada
 const MOTIVOS_PRESET: Record<string, string[]> = {
   organizacao: ['Carteiras bagunçadas', 'Sala desorganizada', 'Mochilas no caminho'],
   materiais: ['Material esquecido', 'Uso inadequado de material', 'Livro danificado'],
@@ -21,12 +21,13 @@ const MOTIVOS_PRESET: Record<string, string[]> = {
 };
 
 export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
+  const [salasList, setSalasList] = useState<{id: string, nome: string}[]>([]);
   const [mode, setMode] = useState<Mode>('avaliacao');
   const [turmaSelecionada, setTurmaSelecionada] = useState('');
   const [dataAcao, setDataAcao] = useState(new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
-  // Estados de Avaliação Positiva
+  // Estados de Avaliação
   const [notas, setNotas] = useState<Partial<Record<RequisitoId, number>>>({});
 
   // Estados de Penalidade
@@ -35,17 +36,94 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
   const [penalidadeMotivo, setPenalidadeMotivo] = useState<string>('');
   const [motivoCustom, setMotivoCustom] = useState<string>('');
 
+  // Busca as salas do banco de dados ao carregar o painel
+  useEffect(() => {
+    async function fetchSalas() {
+      const { data } = await supabase.from('salas').select('id, nome').order('nome');
+      if (data) setSalasList(data);
+    }
+    fetchSalas();
+  }, []);
+
   const handleNota = (reqId: RequisitoId, valor: number) => {
     setNotas(prev => ({ ...prev, [reqId]: valor }));
   };
 
-  const handleSalvar = () => {
+  const handleSalvar = async () => {
     setStatus('loading');
     
-    // Simulação de requisição à API
-    setTimeout(() => {
+    try {
+      // 1. Busca os dados atuais da sala para não sobrescrever a pontuação existente
+      const { data: salaAtual, error: fetchError } = await supabase
+        .from('salas')
+        .select('*')
+        .eq('id', turmaSelecionada)
+        .single();
+
+      if (fetchError || !salaAtual) throw new Error('Erro ao buscar dados da sala');
+
+      // 2. Prepara as novas métricas
+      const novasMetricas = {
+        organizacao: salaAtual.organizacao || 0,
+        materiais: salaAtual.materiais || 0,
+        respeito: salaAtual.respeito || 0,
+        limpeza: salaAtual.limpeza || 0,
+        equipe: salaAtual.equipe || 0,
+        participacao: salaAtual.participacao || 0,
+      };
+
+      // Pega o nome do professor salvo no login
+      const professorNome = sessionStorage.getItem('professor_nome') || 'Professor';
+
+      // Estrutura base do histórico JSON
+      const novoRegistro: any = {
+        id_registro: crypto.randomUUID(),
+        professor: professorNome,
+        data: dataAcao,
+      };
+
+      if (mode === 'avaliacao') {
+        // Adiciona as notas positivas
+        (Object.keys(notas) as RequisitoId[]).forEach((req) => {
+          novasMetricas[req] += notas[req]!;
+        });
+        
+        novoRegistro.tipo = 'avaliacao';
+        novoRegistro.pontos_totais = somaTotal;
+        novoRegistro.notas = notas;
+      } else {
+        // Subtrai os pontos da penalidade
+        const area = penalidadeArea as keyof typeof novasMetricas;
+        novasMetricas[area] -= penalidadePontos;
+        
+        const motivoFinal = motivoCustom.trim() !== '' ? motivoCustom : penalidadeMotivo;
+        
+        novoRegistro.tipo = 'penalidade';
+        novoRegistro.pontos_retirados = penalidadePontos;
+        novoRegistro.area_penalizada = penalidadeArea;
+        novoRegistro.motivo = motivoFinal;
+      }
+
+      // Adiciona o novo registro ao array de histórico
+      const historicoAtualizado = [...(salaAtual.historico_registros || []), novoRegistro];
+
+      // 3. Salva tudo no banco
+      const { error: updateError } = await supabase
+        .from('salas')
+        .update({
+          ...novasMetricas,
+          historico_registros: historicoAtualizado
+        })
+        .eq('id', turmaSelecionada);
+
+      if (updateError) throw updateError;
+
       setStatus('success');
-    }, 800);
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar no banco de dados. Tente novamente.');
+      setStatus('idle');
+    }
   };
 
   const resetForm = () => {
@@ -57,13 +135,10 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
     setStatus('idle');
   };
 
-  // Cálculos Avaliação
   const totalPreenchidos = Object.keys(notas).length;
   const isCompleto = totalPreenchidos === REQUISITOS.length;
   const somaTotal = Object.values(notas).reduce((acc, curr) => (acc || 0) + (curr || 0), 0) || 0;
   const media = totalPreenchidos > 0 ? (somaTotal / totalPreenchidos).toFixed(1) : '0.0';
-
-  // Validação Penalidade
   const isPenalidadeValida = penalidadeArea !== '' && penalidadePontos > 0 && (penalidadeMotivo !== '' || motivoCustom.trim() !== '');
 
   const getColorClass = (nota: number) => {
@@ -94,14 +169,13 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
       <header className="panel-header">
         <div>
           <h1>Ações da Turma</h1>
-          <p>Gerencie avaliações e penalidades rapidamente</p>
+          <p>Olá, {sessionStorage.getItem('professor_nome') || 'Professor'}! Gerencie avaliações e penalidades.</p>
         </div>
         <button className="btn-logout" onClick={onLogout}>
           <LuLogOut size={18} /> Sair
         </button>
       </header>
 
-      {/* Barra de Configuração Fixa (Compartilhada entre os modos) */}
       <div className="config-bar">
         <div className="input-group">
           <label>Turma</label>
@@ -111,7 +185,7 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
             className="modern-select"
           >
             <option value="" disabled>Selecione uma turma...</option>
-            {TURMAS.map(t => (
+            {salasList.map(t => (
               <option key={t.id} value={t.id}>{t.nome}</option>
             ))}
           </select>
@@ -131,7 +205,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         </div>
       </div>
 
-      {/* Tabs de Seleção de Modo */}
       <div className="mode-tabs">
         <button 
           className={`mode-tab ${mode === 'avaliacao' ? 'active' : ''}`}
@@ -143,11 +216,10 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
           className={`mode-tab danger-tab ${mode === 'penalidade' ? 'active' : ''}`}
           onClick={() => setMode('penalidade')}
         >
-          <LuOctagonAlert size={18} /> Aplicar Penalidade
+          <LuPenTool size={18} /> Aplicar Penalidade
         </button>
       </div>
 
-      {/* CONTEÚDO: MODO AVALIAÇÃO */}
       {mode === 'avaliacao' && (
         <div className="requirements-grid fade-in">
           {REQUISITOS.map(req => {
@@ -186,7 +258,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         </div>
       )}
 
-      {/* CONTEÚDO: MODO PENALIDADE */}
       {mode === 'penalidade' && (
         <div className="penalty-section fade-in">
           <div className="penalty-card">
@@ -200,7 +271,7 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
                     className={`area-btn ${penalidadeArea === req.id ? 'active' : ''}`}
                     onClick={() => {
                       setPenalidadeArea(req.id);
-                      setPenalidadeMotivo(''); // Reseta o motivo ao trocar de área
+                      setPenalidadeMotivo(''); 
                     }}
                   >
                     <req.Icon size={16} /> {req.label}
@@ -229,7 +300,7 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
                 <div className="input-group mt-4">
                   <label>3. Motivo da Penalidade</label>
                   <div className="motives-wrapper">
-                    {MOTIVOS_PRESET[penalidadeArea].map(motivo => (
+                    {MOTIVOS_PRESET[penalidadeArea]?.map(motivo => (
                       <button 
                         key={motivo}
                         className={`motive-chip ${penalidadeMotivo === motivo ? 'active' : ''}`}
@@ -263,7 +334,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         </div>
       )}
 
-      {/* FOOTER FIXO */}
       <div className="panel-footer">
         {mode === 'avaliacao' ? (
           <div className="summary-box">
