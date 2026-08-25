@@ -1,0 +1,27 @@
+:root {
+  /* Cores baseadas na Logo Ana Boico */
+  --color-primary: #126543; 
+  --color-secondary: #7AC142; 
+  --color-accent: #1D5B99; 
+  --color-background: #F4F7F6;
+  --color-surface: #FFFFFF;
+  --color-text: #2D3748;
+  --color-text-muted: #718096;
+  
+  /* Medalhas */
+  --color-gold: #FFD700;
+  --color-silver: #C0C0C0;
+  --color-bronze: #CD7F32;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}

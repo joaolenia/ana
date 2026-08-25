@@ -1,0 +1,97 @@
+.ranking-card {
+  display: grid;
+  grid-template-columns: 80px 1fr 200px;
+  align-items: center;
+  background-color: var(--color-background);
+  padding: 1rem;
+  border-radius: 12px;
+  transition: transform 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.ranking-card:hover {
+  transform: scale(1.01);
+  background-color: #eef2f1;
+}
+
+.first-place {
+  background-color: rgba(122, 193, 66, 0.1);
+  border-left: 4px solid var(--color-secondary);
+  box-shadow: 0 4px 15px rgba(122, 193, 66, 0.15);
+}
+
+.rc-posicao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rc-medal {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rc-medal-text {
+  position: absolute;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: white;
+  margin-top: -2px;
+}
+
+.rc-posicao-normal {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--color-text-muted);
+}
+
+.rc-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rc-nome {
+  font-size: 1.2rem;
+  color: var(--color-text);
+}
+
+.rc-tag {
+  background-color: var(--color-accent);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 50px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.rc-pontuacao {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.rc-bar-bg {
+  width: 100px;
+  height: 8px;
+  background-color: #E2E8F0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rc-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.rc-pontos-num {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+  min-width: 65px;
+  text-align: right;
+}
