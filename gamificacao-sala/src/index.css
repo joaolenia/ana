@@ -1,32 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 :root {
-  /* Cores Corporativas (SaaS) */
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-border: #e2e8f0;
+  /* Fundo e Superfícies (Modern SaaS) */
+  --bg-app: linear-gradient(135deg, #f6f8fb 0%, #eef2f6 100%);
+  --bg-surface: rgba(255, 255, 255, 0.95);
+  --border-light: rgba(226, 232, 240, 0.8);
   
   /* Textos */
-  --color-text-main: #0f172a;
-  --color-text-muted: #64748b;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
   
-  /* Cores da Marca (Escola Ana Boico) */
-  --color-primary: #126543;
-  --color-primary-light: #f0fdf4; /* Verde bem claro para fundos */
-  --color-secondary: #7AC142;
-  --color-accent: #1D5B99;
+  /* Cores Vibrantes (Gradientes) */
+  --brand-primary: #10b981;
+  --brand-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --brand-glow: rgba(16, 185, 129, 0.25);
   
-  /* Indicadores e Medalhas */
-  --color-gold: #f59e0b;
-  --color-silver: #94a3b8;
-  --color-bronze: #b45309;
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-neutral: #cbd5e1;
+  /* Cores do Pódio - Super Chamativas */
+  --gold-main: #f59e0b;
+  --gold-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  --gold-bg: #fffbeb;
+  --gold-glow: rgba(245, 158, 11, 0.3);
 
-  /* Sombras e Bordas */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  --silver-main: #64748b;
+  --silver-gradient: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  --silver-bg: #f8fafc;
+  --silver-glow: rgba(148, 163, 184, 0.3);
+
+  --bronze-main: #d97706;
+  --bronze-gradient: linear-gradient(135deg, #fcd34d 0%, #b45309 100%);
+  --bronze-bg: #fff7ed;
+  --bronze-glow: rgba(217, 119, 6, 0.3);
+
+  /* Sombras Premium */
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 16px rgba(15, 23, 42, 0.06);
+  --shadow-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+  
+  /* Animações Snappy (Estilo Apple) */
+  --snappy-spring: cubic-bezier(0.4, 0, 0.2, 1);
+  --bouncy-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
 }
 
 * {
@@ -36,8 +52,9 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text-main);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }

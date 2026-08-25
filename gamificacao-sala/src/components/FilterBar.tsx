@@ -11,30 +11,28 @@ export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
   const filters = [
     { id: 'geral', label: 'Pontuação Geral', Icon: LuTrophy },
     { id: 'organizacao', label: 'Organização', Icon: LuLayers },
-    { id: 'materiais', label: 'Cuidados / Materiais', Icon: LuBookOpen },
+    { id: 'materiais', label: 'Materiais', Icon: LuBookOpen },
     { id: 'respeito', label: 'Respeito', Icon: LuHeart },
     { id: 'limpeza', label: 'Limpeza', Icon: LuSparkles },
-    { id: 'equipe', label: 'Trabalho em Equipe', Icon: LuUsers },
+    { id: 'equipe', label: 'Equipe', Icon: LuUsers },
     { id: 'participacao', label: 'Participação', Icon: LuStar },
   ] as const;
 
   return (
-    <nav className="filter-nav">
+    <div className="filter-wrapper">
       {filters.map(filter => {
-        const IconComponent = filter.Icon; 
-        const isActive = activeFilter === filter.id;
-        
+        const IconComponent = filter.Icon;
         return (
           <button
             key={filter.id}
-            className={`filter-item ${isActive ? 'active' : ''} ${filter.id === 'geral' ? 'highlight-filter' : ''}`}
+            className={`filter-tab ${activeFilter === filter.id ? 'active' : ''}`}
             onClick={() => onFilterChange(filter.id)}
           >
-            <IconComponent size={18} className="filter-icon" />
-            <span className="filter-label">{filter.label}</span>
+            <IconComponent size={16} />
+            <span>{filter.label}</span>
           </button>
         );
       })}
-    </nav>
+    </div>
   );
 }

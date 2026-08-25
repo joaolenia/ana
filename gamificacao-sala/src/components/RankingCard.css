@@ -1,171 +1,153 @@
-.ranking-row {
-  display: grid;
-  grid-template-columns: 80px 1fr 100px 180px;
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.rank-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s var(--bouncy-spring);
+  position: relative;
+  overflow: hidden;
+  animation: popIn 0.5s var(--snappy-spring) backwards;
+}
+
+/* Efeito 3D flutuante no Hover */
+.rank-card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: var(--shadow-hover);
+  border-color: transparent;
+}
+
+/* O Segredo do Destaque: Borda brilhante em cima */
+.rank-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--brand-gradient);
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.rank-card:hover::before {
+  opacity: 1;
+}
+
+/* Variações do Pódio */
+.card-gold { background: var(--gold-bg); }
+.card-gold::before { background: var(--gold-gradient); }
+.card-gold:hover { box-shadow: 0 20px 25px -5px var(--gold-glow); }
+.card-gold .card-badge { color: #fff; background: var(--gold-gradient); box-shadow: 0 4px 10px var(--gold-glow); }
+.card-gold .progress-fill { background: var(--gold-gradient); box-shadow: 0 0 10px var(--gold-glow); }
+
+.card-silver { background: var(--silver-bg); }
+.card-silver::before { background: var(--silver-gradient); }
+.card-silver:hover { box-shadow: 0 20px 25px -5px var(--silver-glow); }
+.card-silver .card-badge { color: #fff; background: var(--silver-gradient); box-shadow: 0 4px 10px var(--silver-glow); }
+.card-silver .progress-fill { background: var(--silver-gradient); }
+
+.card-bronze { background: var(--bronze-bg); }
+.card-bronze::before { background: var(--bronze-gradient); }
+.card-bronze:hover { box-shadow: 0 20px 25px -5px var(--bronze-glow); }
+.card-bronze .card-badge { color: #fff; background: var(--bronze-gradient); box-shadow: 0 4px 10px var(--bronze-glow); }
+.card-bronze .progress-fill { background: var(--bronze-gradient); }
+
+/* Card Padrão fora do pódio */
+.card-standard .card-badge { 
+  color: var(--text-primary); 
+  background: var(--bg-app); 
+  border: 1px solid var(--border-light);
+}
+.card-standard .progress-fill { 
+  background: var(--brand-gradient); 
+  box-shadow: 0 0 10px var(--brand-glow);
+}
+
+/* Elementos Internos */
+.card-top {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-  transition: background-color 0.2s ease;
+}
+
+.card-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.card-score strong {
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.card-score span {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.card-middle h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.5px;
+}
+
+.card-middle p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Barra de Progresso Brilhante */
+.progress-bg {
+  width: 100%;
+  height: 10px;
+  background-color: var(--border-light);
+  border-radius: 100px;
+  overflow: visible; /* Permite o glow vazar */
   position: relative;
 }
 
-.ranking-row:last-child {
-  border-bottom: none;
+.progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animação elástica na barra */
+  position: relative;
 }
 
-.ranking-row:hover {
-  background-color: #f8fafc;
-}
-
-/* Estilos de Pódio (1º, 2º e 3º lugares) */
-.ranking-row::before {
+/* Brilho extra na ponta da barra */
+.progress-fill::after {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
+  right: 0;
   bottom: 0;
-  width: 4px;
-  background-color: transparent;
-}
-
-.rank-gold::before { background-color: var(--color-gold); }
-.rank-silver::before { background-color: var(--color-silver); }
-.rank-bronze::before { background-color: var(--color-bronze); }
-
-.rank-gold { background-color: #fffbeb; } /* Fundo amarelado muito sutil */
-.rank-gold:hover { background-color: #fef3c7; }
-
-/* Colunas */
-.row-col {
-  display: flex;
-  align-items: center;
-}
-
-.col-pos {
-  justify-content: center;
-}
-
-.pos-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.rank-gold .pos-badge { color: var(--color-gold); }
-.rank-silver .pos-badge { color: var(--color-silver); }
-.rank-bronze .pos-badge { color: var(--color-bronze); }
-
-.pos-text {
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--color-text-muted);
-}
-
-.col-info {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.sala-nome {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-  line-height: 1.2;
-}
-
-.sala-meta {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  margin-top: 0.2rem;
-}
-
-/* Tendência de Evolução */
-.col-trend {
-  justify-content: center;
-}
-
-.trend-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-md);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.trend-up {
-  background-color: #dcfce7;
-  color: var(--color-success);
-}
-
-.trend-down {
-  background-color: #fee2e2;
-  color: var(--color-danger);
-}
-
-.trend-neutral {
-  background-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-
-/* Barra de Pontuação Analítica */
-.col-score-bar {
-  justify-content: flex-end;
-}
-
-.score-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.score-bar-bg {
-  flex: 1;
-  height: 6px; /* Barra mais fina e elegante */
-  background-color: var(--color-border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.score-bar-fill {
-  height: 100%;
-  background-color: var(--color-primary);
-  border-radius: 3px;
-}
-
-.rank-gold .score-bar-fill { background-color: var(--color-gold); }
-.rank-silver .score-bar-fill { background-color: var(--color-silver); }
-.rank-bronze .score-bar-fill { background-color: var(--color-bronze); }
-
-.score-value {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--color-text-main);
-  min-width: 32px;
-  text-align: right;
-}
-
-/* Mobile */
-@media (max-width: 640px) {
-  .ranking-row {
-    grid-template-columns: 50px 1fr;
-    grid-template-rows: auto auto;
-    gap: 0.5rem;
-    padding: 1rem;
-  }
-  
-  .col-trend {
-    display: none; /* Esconde a evolução em telas muito pequenas para focar no score */
-  }
-
-  .col-score-bar {
-    grid-column: 2;
-    justify-content: flex-start;
-  }
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6));
+  border-radius: 100px;
 }
