@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LuLock, LuUser, LuEye, LuEyeOff, LuArrowLeft } from 'react-icons/lu';
+import { supabase } from '../../config/supabase'; // <-- Importando a conexão
 import './LoginProfessor.css';
 
 interface LoginProps {
@@ -14,21 +15,36 @@ export function LoginProfessor({ onLogin, onBack }: LoginProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulação de delay de rede
-    setTimeout(() => {
-      if (username === 'admin' && password === 'admin') {
-        sessionStorage.setItem('professor_session', 'true');
-        onLogin();
-      } else {
+    try {
+      // Busca na tabela 'usuarios' o login e a senha digitados
+      const { data, error: dbError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('login', username)
+        .eq('senha', password)
+        .single();
+
+      if (dbError || !data) {
         setError('Usuário ou senha incorretos.');
+        setIsLoading(false);
+        return;
       }
+
+      // Se passou, salva a sessão e avança
+      sessionStorage.setItem('professor_session', data.id);
+      sessionStorage.setItem('professor_nome', data.nome);
+      onLogin();
+
+    } catch (err) {
+      setError('Erro ao conectar ao servidor.');
+    } finally {
       setIsLoading(false);
-    }, 600);
+    }
   };
 
   return (
