@@ -1,100 +1,171 @@
-.ranking-card {
+.ranking-row {
   display: grid;
-  grid-template-columns: 80px 1fr 220px;
+  grid-template-columns: 80px 1fr 100px 180px;
   align-items: center;
-  background-color: var(--color-background);
-  padding: 1rem;
-  border-radius: 12px;
-  transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
-  border-left: 4px solid transparent;
-}
-
-.ranking-card:hover {
-  transform: translateY(-2px);
-  background-color: #eef2f1;
-}
-
-.first-place {
-  background-color: rgba(122, 193, 66, 0.12);
-  border-left: 4px solid var(--color-secondary);
-  box-shadow: 0 4px 15px rgba(122, 193, 66, 0.15);
-}
-
-.rc-posicao {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.rc-medal {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  transition: background-color 0.2s ease;
   position: relative;
+}
+
+.ranking-row:last-child {
+  border-bottom: none;
+}
+
+.ranking-row:hover {
+  background-color: #f8fafc;
+}
+
+/* Estilos de Pódio (1º, 2º e 3º lugares) */
+.ranking-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: transparent;
+}
+
+.rank-gold::before { background-color: var(--color-gold); }
+.rank-silver::before { background-color: var(--color-silver); }
+.rank-bronze::before { background-color: var(--color-bronze); }
+
+.rank-gold { background-color: #fffbeb; } /* Fundo amarelado muito sutil */
+.rank-gold:hover { background-color: #fef3c7; }
+
+/* Colunas */
+.row-col {
   display: flex;
-  justify-content: center;
   align-items: center;
 }
 
-.rc-medal-text {
-  position: absolute;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin-top: -3px;
+.col-pos {
+  justify-content: center;
 }
 
-.rc-posicao-normal {
-  font-size: 1.2rem;
+.pos-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-weight: 700;
+  font-size: 1rem;
+}
+
+.rank-gold .pos-badge { color: var(--color-gold); }
+.rank-silver .pos-badge { color: var(--color-silver); }
+.rank-bronze .pos-badge { color: var(--color-bronze); }
+
+.pos-text {
+  font-weight: 600;
+  font-size: 1rem;
   color: var(--color-text-muted);
 }
 
-.rc-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.col-info {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
-.rc-nome {
-  font-size: 1.2rem;
+.sala-nome {
+  font-size: 1.05rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text-main);
+  line-height: 1.2;
 }
 
-.rc-tag {
-  background-color: var(--color-accent);
-  color: white;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 50px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.sala-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 0.2rem;
 }
 
-.rc-pontuacao {
-  display: flex;
+/* Tendência de Evolução */
+.col-trend {
+  justify-content: center;
+}
+
+.trend-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.trend-up {
+  background-color: #dcfce7;
+  color: var(--color-success);
+}
+
+.trend-down {
+  background-color: #fee2e2;
+  color: var(--color-danger);
+}
+
+.trend-neutral {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* Barra de Pontuação Analítica */
+.col-score-bar {
   justify-content: flex-end;
 }
 
-.rc-bar-bg {
-  width: 120px;
-  height: 10px;
-  background-color: #E2E8F0;
-  border-radius: 5px;
+.score-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.score-bar-bg {
+  flex: 1;
+  height: 6px; /* Barra mais fina e elegante */
+  background-color: var(--color-border);
+  border-radius: 3px;
   overflow: hidden;
 }
 
-.rc-bar-fill {
+.score-bar-fill {
   height: 100%;
-  border-radius: 5px;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
+  background-color: var(--color-primary);
+  border-radius: 3px;
 }
 
-.rc-pontos-num {
-  font-weight: 800;
-  font-size: 1.15rem;
-  color: var(--color-primary);
-  min-width: 70px;
+.rank-gold .score-bar-fill { background-color: var(--color-gold); }
+.rank-silver .score-bar-fill { background-color: var(--color-silver); }
+.rank-bronze .score-bar-fill { background-color: var(--color-bronze); }
+
+.score-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text-main);
+  min-width: 32px;
   text-align: right;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .ranking-row {
+    grid-template-columns: 50px 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .col-trend {
+    display: none; /* Esconde a evolução em telas muito pequenas para focar no score */
+  }
+
+  .col-score-bar {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
 }

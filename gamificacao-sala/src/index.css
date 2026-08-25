@@ -1,17 +1,32 @@
 :root {
-  /* Cores baseadas na Logo Ana Boico */
-  --color-primary: #126543; 
-  --color-secondary: #7AC142; 
-  --color-accent: #1D5B99; 
-  --color-background: #F4F7F6;
-  --color-surface: #FFFFFF;
-  --color-text: #2D3748;
-  --color-text-muted: #718096;
+  /* Cores Corporativas (SaaS) */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
   
-  /* Medalhas */
-  --color-gold: #FFD700;
-  --color-silver: #C0C0C0;
-  --color-bronze: #CD7F32;
+  /* Textos */
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+  
+  /* Cores da Marca (Escola Ana Boico) */
+  --color-primary: #126543;
+  --color-primary-light: #f0fdf4; /* Verde bem claro para fundos */
+  --color-secondary: #7AC142;
+  --color-accent: #1D5B99;
+  
+  /* Indicadores e Medalhas */
+  --color-gold: #f59e0b;
+  --color-silver: #94a3b8;
+  --color-bronze: #b45309;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-neutral: #cbd5e1;
+
+  /* Sombras e Bordas */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 }
 
 * {
@@ -21,7 +36,8 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
 }
