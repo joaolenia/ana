@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { REQUISITOS } from '../../config/data';
-import type {  RequisitoId } from '../../config/data';
+import type { RequisitoId } from '../../config/data';
 import { supabase } from '../../config/supabase';
-import { LuLogOut, LuCalendar, LuCircleCheck, LuPenTool, LuMessageSquareWarning } from 'react-icons/lu';
+import { LuLogOut, LuCalendar, LuCircleCheck, LuPenTool, LuMessageSquareWarning, LuShieldAlert } from 'react-icons/lu';
 import './ProfessorPanel.css';
 
 interface ProfessorPanelProps {
@@ -22,6 +22,7 @@ const MOTIVOS_PRESET: Record<string, string[]> = {
 
 export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
   const [salasList, setSalasList] = useState<{id: string, nome: string}[]>([]);
+  const [isAvaliador, setIsAvaliador] = useState<boolean>(true);
   const [mode, setMode] = useState<Mode>('avaliacao');
   const [turmaSelecionada, setTurmaSelecionada] = useState('');
   const [dataAcao, setDataAcao] = useState(new Date().toISOString().split('T')[0]);
@@ -36,14 +37,32 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
   const [penalidadeMotivo, setPenalidadeMotivo] = useState<string>('');
   const [motivoCustom, setMotivoCustom] = useState<string>('');
 
-  // Busca as salas do banco de dados ao carregar o painel
+  const professorNome = sessionStorage.getItem('professor_nome') || 'Professor';
+
+  // Busca as salas e verifica se o usuário logado é avaliador na tabela 'usuarios'
   useEffect(() => {
-    async function fetchSalas() {
-      const { data } = await supabase.from('salas').select('id, nome').order('nome');
-      if (data) setSalasList(data);
+    async function fetchData() {
+      // 1. Busca salas
+      const { data: salasData } = await supabase.from('salas').select('id, nome').order('nome');
+      if (salasData) setSalasList(salasData);
+
+      // 2. Verifica permissão de avaliador na tabela 'usuarios'
+      const { data: userData, error } = await supabase
+        .from('usuarios')
+        .select('avaliador')
+        .ilike('nome', professorNome)
+        .single();
+
+      if (!error && userData) {
+        const podeAvaliar = Boolean(userData.avaliador);
+        setIsAvaliador(podeAvaliar);
+        if (!podeAvaliar) {
+          setMode('penalidade'); // Se avaliador for false, força para o modo de penalidade
+        }
+      }
     }
-    fetchSalas();
-  }, []);
+    fetchData();
+  }, [professorNome]);
 
   const handleNota = (reqId: RequisitoId, valor: number) => {
     setNotas(prev => ({ ...prev, [reqId]: valor }));
@@ -53,7 +72,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
     setStatus('loading');
     
     try {
-      // 1. Busca os dados atuais da sala para não sobrescrever a pontuação existente
       const { data: salaAtual, error: fetchError } = await supabase
         .from('salas')
         .select('*')
@@ -62,7 +80,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
 
       if (fetchError || !salaAtual) throw new Error('Erro ao buscar dados da sala');
 
-      // 2. Prepara as novas métricas
       const novasMetricas = {
         organizacao: salaAtual.organizacao || 0,
         materiais: salaAtual.materiais || 0,
@@ -72,10 +89,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         participacao: salaAtual.participacao || 0,
       };
 
-      // Pega o nome do professor salvo no login
-      const professorNome = sessionStorage.getItem('professor_nome') || 'Professor';
-
-      // Estrutura base do histórico JSON
       const novoRegistro: any = {
         id_registro: crypto.randomUUID(),
         professor: professorNome,
@@ -83,7 +96,12 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
       };
 
       if (mode === 'avaliacao') {
-        // Adiciona as notas positivas
+        if (!isAvaliador) {
+          alert('Acesso negado: Seu usuário não possui permissão para realizar avaliações.');
+          setStatus('idle');
+          return;
+        }
+
         (Object.keys(notas) as RequisitoId[]).forEach((req) => {
           novasMetricas[req] += notas[req]!;
         });
@@ -92,7 +110,6 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         novoRegistro.pontos_totais = somaTotal;
         novoRegistro.notas = notas;
       } else {
-        // Subtrai os pontos da penalidade
         const area = penalidadeArea as keyof typeof novasMetricas;
         novasMetricas[area] -= penalidadePontos;
         
@@ -104,10 +121,8 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         novoRegistro.motivo = motivoFinal;
       }
 
-      // Adiciona o novo registro ao array de histórico
       const historicoAtualizado = [...(salaAtual.historico_registros || []), novoRegistro];
 
-      // 3. Salva tudo no banco
       const { error: updateError } = await supabase
         .from('salas')
         .update({
@@ -169,7 +184,7 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
       <header className="panel-header">
         <div>
           <h1>Ações da Turma</h1>
-          <p>Olá, {sessionStorage.getItem('professor_nome') || 'Professor'}! Gerencie avaliações e penalidades.</p>
+          <p>Olá, {professorNome}! {!isAvaliador && <span className="badge-restricted"><LuShieldAlert size={14}/> Modo Restrito: Apenas Penalidades</span>}</p>
         </div>
         <button className="btn-logout" onClick={onLogout}>
           <LuLogOut size={18} /> Sair
@@ -205,22 +220,24 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         </div>
       </div>
 
-      <div className="mode-tabs">
-        <button 
-          className={`mode-tab ${mode === 'avaliacao' ? 'active' : ''}`}
-          onClick={() => setMode('avaliacao')}
-        >
-          <LuPenTool size={18} /> Lançar Pontuação
-        </button>
-        <button 
-          className={`mode-tab danger-tab ${mode === 'penalidade' ? 'active' : ''}`}
-          onClick={() => setMode('penalidade')}
-        >
-          <LuPenTool size={18} /> Aplicar Penalidade
-        </button>
-      </div>
+      {isAvaliador && (
+        <div className="mode-tabs">
+          <button 
+            className={`mode-tab ${mode === 'avaliacao' ? 'active' : ''}`}
+            onClick={() => setMode('avaliacao')}
+          >
+            <LuPenTool size={18} /> Lançar Pontuação
+          </button>
+          <button 
+            className={`mode-tab danger-tab ${mode === 'penalidade' ? 'active' : ''}`}
+            onClick={() => setMode('penalidade')}
+          >
+            <LuPenTool size={18} /> Aplicar Penalidade
+          </button>
+        </div>
+      )}
 
-      {mode === 'avaliacao' && (
+      {mode === 'avaliacao' && isAvaliador && (
         <div className="requirements-grid fade-in">
           {REQUISITOS.map(req => {
             const Icon = req.Icon;
@@ -335,7 +352,7 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
       )}
 
       <div className="panel-footer">
-        {mode === 'avaliacao' ? (
+        {mode === 'avaliacao' && isAvaliador ? (
           <div className="summary-box">
             <div className="summary-item">
               <span>Status</span>
@@ -364,13 +381,13 @@ export function ProfessorPanel({ onLogout }: ProfessorPanelProps) {
         <button 
           className={`btn-save ${mode === 'penalidade' ? 'btn-danger-gradient' : ''}`} 
           disabled={
-            mode === 'avaliacao' 
+            mode === 'avaliacao' && isAvaliador
               ? (!turmaSelecionada || !isCompleto || status === 'loading')
               : (!turmaSelecionada || !isPenalidadeValida || status === 'loading')
           }
           onClick={handleSalvar}
         >
-          {status === 'loading' ? 'Processando...' : (mode === 'avaliacao' ? 'Salvar Avaliação' : 'Registrar Penalidade')}
+          {status === 'loading' ? 'Processando...' : (mode === 'avaliacao' && isAvaliador ? 'Salvar Avaliação' : 'Registrar Penalidade')}
         </button>
       </div>
     </div>
